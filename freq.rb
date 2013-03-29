@@ -11,26 +11,9 @@ if not File.exists?(ARGV[0])
   exit
 end
 
-fh = {}
-
-#((1..22).to_a.map {|i| i.to_s} + ["X", "Y", "M"]).each do |chr|
 def load_freq(chr)
-  fname = "genotype_freqs_chr#{chr}_CEU_r28_nr.b36_fwd.txt"
-  fh = {}
-
-  File.open(fname) do |f|
-    f.readline # Discard header
-    while ! f.eof?
-      a = f.readline.split
-      fh[a[0]] = {}
-
-      fh[a[0]][a[10]] = a[11]
-      fh[a[0]][a[13]] = a[14]
-      fh[a[0]][a[16]] = a[17]
-    end
-  end
-
-  return fh
+  fname = "rb-chr-#{chr}-CEU-r28-b36.bin"
+  return Marshal.load(IO.read(fname))
 end
 
 File.open(ARGV[0]) do |f|

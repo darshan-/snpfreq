@@ -2,3 +2,4 @@ genotype_freqs_chr*.txt
 *genome*
 *.bcp
 *.tgz
+*.bin
