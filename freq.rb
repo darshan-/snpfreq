@@ -11,55 +11,65 @@ if not File.exists?(ARGV[0])
   exit
 end
 
+fh = {}
+
+#((1..22).to_a.map {|i| i.to_s} + ["X", "Y", "M"]).each do |chr|
+def load_freq(chr)
+  fname = "genotype_freqs_chr#{chr}_CEU_r28_nr.b36_fwd.txt"
+  fh = {}
+
+  File.open(fname) do |f|
+    f.readline # Discard header
+    while ! f.eof?
+      a = f.readline.split
+      fh[a[0]] = {}
+
+      fh[a[0]][a[10]] = a[11]
+      fh[a[0]][a[13]] = a[14]
+      fh[a[0]][a[16]] = a[17]
+    end
+  end
+
+  return fh
+end
+
 File.open(ARGV[0]) do |f|
+  cur_chr = nil
+
   while ! f.eof?
     s = f.readline
     next if s[0] == "#"
 
     id, chr, position, gt = s.split
-    hmgt = gt.insert(1, "/").chomp("/")
+
+    hmgt = ""
+    if gt.length == 2
+      gt.insert(1, "/")
+      hmgt = gt
+    else
+      hmgt = "#{gt}/#{gt}"
+    end
+
     hmchr = chr
     hmchr = "M" if hmchr == "MT"
-    freq_file = "genotype_freqs_chr#{hmchr}_CEU_r28_nr.b36_fwd.txt"
+
+    if hmchr != cur_chr
+      $stderr.puts "Loading frequency data for chromosome #{hmchr}..."
+      fh = load_freq(hmchr)
+      cur_chr = hmchr
+      $stderr.puts "Attaching frequency data to genome..."
+    end
 
     if gt.match("-")
       puts "** no call on #{id} (chr#{chr})"
       next
     end
 
-    freqs = `grep #{id} #{freq_file}`
-
-    if $?.exitstatus > 0
-      puts "** #{id} not documented in #{freq_file}"
+    if fh[id].nil?
+      puts "** #{id} not documented in frequency file"
       next
     end
 
-    freqa = freqs.split
-
-    if freqa[0] != id
-      puts "** Something went wrong finding #{id} in #{freq_file}"
-      next
-    end
-
-    aag = freqa[10]
-    aaf = freqa[11]
-    amg = freqa[13]
-    amf = freqa[14]
-    mmg = freqa[16]
-    mmf = freqa[17]
-
-    freq = ""
-
-    if hmgt == aag
-      freq = aaf
-    elsif hmgt == amg
-      freq = amf
-    elsif hmgt == mmg
-      freq = mmf
-    else
-      freq = "unknown"
-    end
-
-    puts "#{id} (chr#{chr}) is #{hmgt} with frequency #{freq}"
+    puts "#{id} (chr#{chr}) is #{gt} with frequency #{fh[id][hmgt]}"
   end
 end
