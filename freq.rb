@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 
+require('msgpack')
+
 if ARGV.length != 1
   puts "usage: freq.rb genome-file"
   exit
@@ -12,8 +14,8 @@ if not File.exists?(ARGV[0])
 end
 
 def load_freq(chr)
-  fname = "rb-chr-#{chr}-CEU-r28-b36.bin"
-  return Marshal.load(IO.read(fname))
+  fname = "rb-chr-#{chr}-CEU-r28-b36.msgpack.bin"
+  return MessagePack.unpack(IO.read(fname))
 end
 
 File.open(ARGV[0]) do |f|

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 
+require('msgpack')
+
 ((1..22).to_a.map {|i| i.to_s} + ["X", "Y", "M"]).each do |chr|
   ifname = "genotype_freqs_chr#{chr}_CEU_r28_nr.b36_fwd.txt"
   fh = {}
@@ -18,9 +20,9 @@
     end
   end
 
-  ofname = "rb-chr-#{chr}-CEU-r28-b36.bin"
+  ofname = "rb-chr-#{chr}-CEU-r28-b36.msgpack.bin"
   puts "Writing #{ofname}..."
   File.open(ofname, 'w') do |f|
-    f.write(Marshal.dump(fh))
+    f.write(MessagePack.pack(fh))
   end
 end
