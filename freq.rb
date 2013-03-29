@@ -18,6 +18,28 @@ def load_freq(chr)
   return MessagePack.unpack(IO.read(fname))
 end
 
+def flip(n)
+  return {"A" => "T", "T" => "A", "C" => "G", "G" => "C"}[n] || n
+end
+
+def flip_gt(gt)
+  fgt = gt.dup
+
+  fgt[0] = flip(fgt[0])
+
+  if fgt.length >= 3
+    fgt[2] = flip(fgt[2])
+
+    if fgt[0] > fgt[2] # Genotypes present nucleotides alphabetically
+      tmp = fgt[0]
+      fgt[0] = fgt[2]
+      fgt[2] = tmp
+    end
+  end
+
+  return fgt
+end
+
 File.open(ARGV[0]) do |f|
   cur_chr = nil
 
@@ -55,6 +77,26 @@ File.open(ARGV[0]) do |f|
       next
     end
 
-    puts "#{id} (chr#{chr}) is #{gt} with frequency #{fh[id][hmgt]}"
+    freq = fh[id][hmgt]
+    flag = ""
+
+    fhmgt = flip_gt(hmgt)
+    ffreq = fh[id][fhmgt]
+
+    if fhmgt != hmgt && ! ffreq.nil?
+      flag = " (potential misorientation; flip has frequency #{ffreq})"
+    end
+
+    if freq.nil?
+      if ffreq.nil?
+        $stderr.puts " *** #{id} has neither #{hmgt} nor #{fhmgt}"
+        next
+      else
+        freq = ffreq
+        flag = " (flipped)"
+      end
+    end
+
+    puts "#{id} (chr#{chr}) is #{gt} with frequency #{freq}#{flag}"
   end
 end
